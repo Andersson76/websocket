@@ -8,16 +8,6 @@ const port = 3000;
 
 app.use(express.static("public"));
 
-server.listen(port, () => {
-  console.log(`Socket.IO Server running at http://localhost:${port}/`);
-});
-
-setInterval(() => {
-  let today = new Date();
-  let time =
-    today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-  io.emit("time", time);
-}, 1000);
 
 io.on("connection", (socket) => {
   console.log(`A client with id ${socket.id} connected to the chat!`);
@@ -32,4 +22,8 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log(`Client ${socket.id} disconnected!`);
   });
+});
+
+server.listen(port, () => {
+  console.log(`Socket.IO Server running at http://localhost:${port}/`);
 });
