@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1>Chat</h1>
+    <div id="userContainer"></div>
+    <div id="user">
+      <form id="formUser" action="">
+        <p>namn: <input id="inputUser" type="text" /></p>
+        <p>favoritfärg: <input id="inputColor" type="text" /></p>
+        <button>Skriv in ditt namn</button>
+      </form>
+    </div>
+    <div id="message">
+      <form id="formMessage" action="">
+        <input id="inputMessage" type="text" />
+        <button>send</button>
+      </form>
+    </div>
+
+    <h2>Chatmeddelanden</h2>
+    <ul id="messages"></ul>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="client.js"></script>
+  </body>
+</html>
