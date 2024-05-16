@@ -7,10 +7,15 @@ const messages = document.querySelector("#messages");
 const formMessage = document.querySelector("#formMessage");
 const inputMessage = document.querySelector("#inputMessage");
 const userContainer = document.querySelector("#userContainer");
+const throwDiceButton = document.querySelector("#throwDice");
 
 let myUser;
 let myInputColor;
 
+
+throwDiceButton.addEventListener("click", () => {
+  socket.emit("rollDice");
+});
 // kopplar submit
 formUser.addEventListener("submit", function (e) {
   e.preventDefault();
@@ -32,6 +37,11 @@ formMessage.addEventListener("submit", function (e) {
     });
     inputMessage.value = "";
   }
+});
+
+socket.on("diceRolled", (result) => {
+  alert(`Du kastade: ${result}`);
+  // Update UI to display the result as needed
 });
 
 // visar chathistorik (allt som alla skickat)
