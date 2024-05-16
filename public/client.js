@@ -14,7 +14,7 @@ let myInputColor;
 
 
 throwDiceButton.addEventListener("click", () => {
-  socket.emit("rollDice");
+  socket.emit("rollDice", { user: myUser });
 });
 // kopplar submit
 formUser.addEventListener("submit", function (e) {
@@ -39,8 +39,8 @@ formMessage.addEventListener("submit", function (e) {
   }
 });
 
-socket.on("diceRolled", (result) => {
-  alert(`Du kastade: ${result}`);
+socket.on("diceRolled", (data) => {
+  alert(`Du kastade: ${data.result}`);
   // Update UI to display the result as needed
 });
 
