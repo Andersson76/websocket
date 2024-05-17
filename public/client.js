@@ -8,32 +8,48 @@ const formMessage = document.querySelector("#formMessage");
 const inputMessage = document.querySelector("#inputMessage");
 const userContainer = document.querySelector("#userContainer");
 const throwDice = document.querySelector("#throwDice");
+const resetGame = document.querySelector("#resetGame"); // Ny reset-knapp
 const diceCounts = document.querySelector("#diceCounts");
 const totalDisplays = document.querySelector("#totalDisplays");
 
 let myUser;
 let myInputColor;
-let totals = {}; // Objekt för att lagra totalen för varje spelare
+//let totals = {}; // Objekt för att lagra totalen för varje spelare
 
 throwDice.addEventListener("click", () => {
-  let random = Math.floor(Math.random() * 6 + 1);
-  socket.emit("rollDice", { user: myUser, result: random });
+  socket.emit("rollDice", { user: myUser });
+});
+
+resetGame.addEventListener("click", () => {
+  socket.emit("resetGame", { user: myUser });
 });
 
 socket.on("diceRolled", (data) => {
+  const { user, result, total } = data;
+
+  // Uppdatera tärningskast
   let diceroll = document.createElement("li");
-  diceroll.textContent = data.user + " " + data.result;
+  diceroll.textContent = `${user} kastade: ${result}`;
   diceCounts.appendChild(diceroll);
 
-  // Uppdatera totalen för den specifika spelaren
-  if (totals[data.user]) {
-    totals[data.user] += data.result;
+  // Uppdatera total summa
+  let userTotal = document.querySelector(`#${user}-total`);
+  if (!userTotal) {
+    userTotal = document.createElement("div");
+    userTotal.id = `${user}-total`;
+    userTotal.innerHTML = `<strong>${user} total:</strong> <span>${total}</span>`;
+    totalDisplays.appendChild(userTotal);
   } else {
-    totals[data.user] = data.result;
+    userTotal.querySelector("span").textContent = total;
   }
+});
 
-  // Uppdatera gränssnittet med den nya totalen
-  updateTotalDisplay(data.user);
+socket.on("gameReset", (user) => {
+  const userTotal = document.querySelector(`#${user}-total`);
+  if (userTotal) {
+    userTotal.querySelector("span").textContent = 0;
+  }
+  diceCounts.innerHTML = "";
 });
 
 formUser.addEventListener("submit", function (e) {
