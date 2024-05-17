@@ -5,6 +5,7 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
 const port = 3000;
+const mongoose = require("mongoose");
 
 const messageModel = require("./models/messageModel");
 const dicecountModel = require("./models/dicecountModel");
@@ -43,14 +44,25 @@ io.on("connection", (socket) => {
 
   socket.on("chatMessage", async (msg) => {
     try {
-      const { user, message, inputColor, date } = msg; // Plocka ut fälten från meddelandeobjektet
+      const { user, message, inputColor } = msg; // Plocka ut fälten från meddelandeobjektet
       // Spara meddelandet till MongoDB inklusive datumet
+
+      let today = new Date();
+      let date =
+        today.getFullYear() +
+        "-" +
+        (today.getMonth() + 1) +
+        "-" +
+        today.getDate();
+      let time =
+        today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+      let dateTime = date + " " + time;
 
       const newMessage = new messageModel({
         user: user,
         message: message,
         inputColor: inputColor, // Inkludera inputColor i meddelandeobjektet
-        date: date, // Inkludera datumet från meddelandeobjektet
+        date: dateTime, // Inkludera datumet från meddelandeobjektet
       });
       await newMessage.save(); // Spara meddelandet till databasen
       io.emit("newChatMessage", {
@@ -66,19 +78,47 @@ io.on("connection", (socket) => {
 
   socket.on("rollDice", async (data) => {
     const diceResult = Math.floor(Math.random() * 6) + 1;
-    io.emit("diceRolled", { user: data.user, result: diceResult });
-
-    // Spara till MongoDB
     try {
-      const dicecountInfo = new dicecountModel({
+      const userDiceData = await dicecountModel.findOne({ user: data.user });
+      let newSum = diceResult;
+
+      if (userDiceData) {
+        newSum += userDiceData.dicecountSum;
+        userDiceData.dicecountSum = newSum;
+        userDiceData.dicecount = diceResult;
+        await userDiceData.save();
+      } else {
+        const dicecountInfo = new dicecountModel({
+          user: data.user,
+          dicecount: diceResult,
+          dicecountSum: newSum,
+        });
+        await dicecountInfo.save();
+      }
+
+      io.emit("diceRolled", {
         user: data.user,
-        dicecount: diceResult,
-        dicecountSum: diceResult,
+        result: diceResult,
+        total: newSum,
       });
-      await dicecountInfo.save();
-      console.log("Dice roll saved to MongoDB.", diceResult);
+      console.log(
+        "Dice roll saved to MongoDB.",
+        diceResult,
+        "New sum:",
+        newSum
+      );
     } catch (error) {
       console.error("Error saving dice roll to MongoDB: ", error);
+    }
+  });
+
+  socket.on("resetGame", async (data) => {
+    try {
+      await dicecountModel.updateOne({ user: data.user }, { dicecountSum: 0 });
+      io.emit("gameReset", data.user);
+      console.log(`Game reset for user: ${data.user}`);
+    } catch (error) {
+      console.error("Error resetting game: ", error);
     }
   });
 
