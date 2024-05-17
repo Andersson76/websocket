@@ -7,22 +7,40 @@ const messages = document.querySelector("#messages");
 const formMessage = document.querySelector("#formMessage");
 const inputMessage = document.querySelector("#inputMessage");
 const userContainer = document.querySelector("#userContainer");
-const throwDiceButton = document.querySelector("#throwDice");
+const throwDice = document.querySelector("#throwDice");
 const diceCounts = document.querySelector("#diceCounts");
+const totalDisplays = document.querySelector("#totalDisplays");
 
 let myUser;
 let myInputColor;
+let totals = {}; // Objekt för att lagra totalen för varje spelare
 
-
-throwDiceButton.addEventListener("click", () => {
-  socket.emit("rollDice", { user: myUser });
+throwDice.addEventListener("click", () => {
+  let random = Math.floor(Math.random() * 6 + 1);
+  socket.emit("rollDice", { user: myUser, result: random });
 });
-// kopplar submit
+
+socket.on("diceRolled", (data) => {
+  let diceroll = document.createElement("li");
+  diceroll.textContent = data.user + " " + data.result;
+  diceCounts.appendChild(diceroll);
+
+  // Uppdatera totalen för den specifika spelaren
+  if (totals[data.user]) {
+    totals[data.user] += data.result;
+  } else {
+    totals[data.user] = data.result;
+  }
+
+  // Uppdatera gränssnittet med den nya totalen
+  updateTotalDisplay(data.user);
+});
+
 formUser.addEventListener("submit", function (e) {
   e.preventDefault();
   myUser = inputUser.value;
   myInputColor = inputColor.value;
-  userContainer.innerHTML = `<h2>Välkommen ${myUser} din favoritfärg är ${myInputColor}</h2>`;
+  userContainer.innerHTML = `<h2>Välkommen ${myUser} med favoritfärgen ${myInputColor}</h2>`;
   document.querySelector("#user").style.display = "none";
   document.querySelector("#message").style.display = "block";
 });
@@ -30,22 +48,17 @@ formUser.addEventListener("submit", function (e) {
 formMessage.addEventListener("submit", function (e) {
   e.preventDefault();
   if (inputMessage.value) {
-    console.log(myInputColor);
+    const now = new Date(); // Skapa ett datumobjekt för det aktuella datumet och tiden
     socket.emit("chatMessage", {
       user: myUser,
       inputColor: myInputColor,
       message: inputMessage.value,
+      date: now, // Lägg till datumet i det skickade objektet
     });
     inputMessage.value = "";
   }
 });
 
-socket.on("diceRolled", (data) => {
-  alert(`Du kastade: ${data.result}`);
-  // Update UI to display the result as needed
-});
-
-// visar chathistorik (allt som alla skickat)
 socket.on("newChatMessage", function (msg) {
   let item = document.createElement("li");
   item.textContent =
@@ -70,3 +83,15 @@ socket.on("newChatMessage", function (msg) {
 // let time =
 //   today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
 // let dateTime = date + " " + time;
+
+function updateTotalDisplay(user) {
+  let totalDisplay = totalDisplays.querySelector(`#${user}`);
+  if (totalDisplay) {
+    totalDisplay.textContent = `Total för ${user}: ${totals[user]}`;
+  } else {
+    totalDisplay = document.createElement("p");
+    totalDisplay.id = user;
+    totalDisplay.textContent = `Total för ${user}: ${totals[user]}`;
+    totalDisplays.appendChild(totalDisplay);
+  }
+}
