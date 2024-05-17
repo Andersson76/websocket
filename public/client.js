@@ -8,6 +8,7 @@ const formMessage = document.querySelector("#formMessage");
 const inputMessage = document.querySelector("#inputMessage");
 const userContainer = document.querySelector("#userContainer");
 const throwDiceButton = document.querySelector("#throwDice");
+const diceCounts = document.querySelector("#diceCounts");
 
 let myUser;
 let myInputColor;

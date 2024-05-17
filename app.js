@@ -7,15 +7,57 @@ const io = new Server(server);
 const port = 3000;
 const mongoose = require("mongoose");
 
-const DicecountModel = require("./models/dicecountModel");
+const messageModel = require("./models/messageModel");
+const dicecountModel = require("./models/dicecountModel");
 
 const connectionMongoDB = require("./connectionMongoDB");
 connectionMongoDB();
 
 app.use(express.static("public"));
 
+// Endpoint to messages
+app.get("/messages", async (req, res) => {
+  try {
+    const allMessages = await messageModel.find();
+    return res.status(200).json(allMessages);
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message,
+    });
+  }
+});
+
+// Endpoint to dicerolls
+app.get("/dicerolls", async (req, res) => {
+  try {
+    const allDicecount = await dicecountModel.find();
+    return res.status(200).json(allDicecount);
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message,
+    });
+  }
+});
+
 io.on("connection", (socket) => {
   console.log(`A client with id ${socket.id} connected to the chat!`);
+
+  socket.on("chatMessage", (msg) => {
+    io.emit("newChatMessage", {
+      user: msg.user,
+      message: msg.message,
+      inputColor: msg.inputColor,
+    });
+
+    let user = msg.user;
+    let message = msg.message;
+
+    const newMessage = new messageModel({
+      user: user,
+      message: message,
+    });
+    newMessage.save();
+  });
 
   socket.on("rollDice", async (data) => {
     const diceResult = Math.floor(Math.random() * 6) + 1;
@@ -23,7 +65,7 @@ io.on("connection", (socket) => {
 
     // Save to MongoDB
     try {
-      const dicecountInfo = new DicecountModel({
+      const dicecountInfo = new dicecountModel({
         user: data.user,
         dicecount: diceResult,
         dicecountSum: diceResult,
@@ -33,14 +75,6 @@ io.on("connection", (socket) => {
     } catch (error) {
       console.error("Error saving dice roll to MongoDB: ", error);
     }
-  });
-
-  socket.on("chatMessage", (msg) => {
-    io.emit("newChatMessage", {
-      user: msg.user,
-      message: msg.message,
-      inputColor: msg.inputColor,
-    });
   });
 
   socket.on("disconnect", () => {
