@@ -68,21 +68,7 @@ socket.on("newChatMessage", function (msg) {
     ", skriver nu: " +
     msg.message;
   messages.appendChild(item);
-  //spara till mongoDB
-  //   const newMessage = newMessageModel({
-  //     message: message,
-  //     user: user,
-  //     date: dateTime,
-  //   });
-  //   newMessage.save();
 });
-
-// let today = new Date();
-// let date =
-//   today.getFullYear() + "-" + (today.getMonth() + 1) + "-" + today.getDate();
-// let time =
-//   today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-// let dateTime = date + " " + time;
 
 function updateTotalDisplay(user) {
   let totalDisplay = totalDisplays.querySelector(`#${user}`);

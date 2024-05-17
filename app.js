@@ -5,7 +5,6 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
 const port = 3000;
-const mongoose = require("mongoose");
 
 const messageModel = require("./models/messageModel");
 const dicecountModel = require("./models/dicecountModel");
@@ -64,6 +63,7 @@ io.on("connection", (socket) => {
       console.error("Error saving message to MongoDB: ", error);
     }
   });
+
   socket.on("rollDice", async (data) => {
     const diceResult = Math.floor(Math.random() * 6) + 1;
     io.emit("diceRolled", { user: data.user, result: diceResult });
